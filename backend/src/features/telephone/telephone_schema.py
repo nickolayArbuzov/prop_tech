@@ -1,0 +1,11 @@
+from pydantic import BaseModel, Field
+from datetime import datetime
+
+
+class Telephone(BaseModel):
+    id: int
+    phone_number: str
+    organization_id: int
+
+    class Config:
+        orm_mode = True
