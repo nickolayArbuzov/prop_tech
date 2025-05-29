@@ -166,10 +166,16 @@ class OrganizationQueryRepository:
                     "telephone".id AS telephone_id,
                     "telephone".phone_number AS telephone_phone_number,
                     "activity".id AS activity_id,
-                    "activity".name AS activity_name
+                    "activity".name AS activity_name,
+                    "build".id AS build_id,
+                    "build".address AS build_address,
+                    ST_Y("build".location::geometry) AS build_latitude,
+                    ST_X("build".location::geometry) AS build_longitude
                 FROM "organization"
                 LEFT JOIN "telephone" ON "telephone".organization_id = "organization".id
-                LEFT JOIN "activity" ON "activity".organization_id = "organization".id
+                LEFT JOIN "organization_activity" oa ON oa.organization_id = "organization".id
+                LEFT JOIN "activity" ON "activity".id = oa.activity_id
+                LEFT JOIN "build" ON "build".id = "organization".build_id
                 WHERE "organization".id = :organization_id
             """
         )
@@ -189,6 +195,17 @@ class OrganizationQueryRepository:
                         "name": row[column_headers.index("organization_name")],
                         "telephones": [],
                         "activities": [],
+                        "build": (
+                            {
+                                "address": row[column_headers.index("build_address")],
+                                "latitude": row[column_headers.index("build_latitude")],
+                                "longitude": row[
+                                    column_headers.index("build_longitude")
+                                ],
+                            }
+                            if row[column_headers.index("build_id")] is not None
+                            else None
+                        ),
                     }
                     organization_obj = result["organization"]
                 telephone_id = row[column_headers.index("telephone_id")]
