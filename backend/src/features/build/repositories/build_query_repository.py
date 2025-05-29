@@ -13,7 +13,7 @@ class BuildQueryRepository:
         builds_query = text(
             """
                 WITH paginated_builds AS (
-                    SELECT id, address, latitude, longitude
+                    SELECT id, address, ST_Y(location::geometry) AS latitude, ST_X(location::geometry) AS longitude
                     FROM "build"
                     LIMIT :limit OFFSET :offset
                 )
