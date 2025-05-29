@@ -31,10 +31,12 @@ router = APIRouter()
 
 @router.get("/organizations/by-building/{building_id}", responses=getManyByBuildingDoc)
 async def getManyByBuilding(
-    db: AsyncSession = Depends(get_read_db), pagination: Pagination = Depends()
+    building_id: int,
+    db: AsyncSession = Depends(get_read_db),
+    pagination: Pagination = Depends(),
 ):
     organization_query_repository = OrganizationQueryRepository(db)
-    query = GetManyByBuildingQuery(pagination=pagination)
+    query = GetManyByBuildingQuery(building_id=building_id, pagination=pagination)
     use_case = GetManyByBuildingUseCase(
         organization_repository=organization_query_repository
     )
