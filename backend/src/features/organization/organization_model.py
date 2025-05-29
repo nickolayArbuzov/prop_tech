@@ -4,21 +4,24 @@ from sqlalchemy.orm import relationship
 
 from src.database import Base
 
-from ...common.mixins.timestamp_mixin import TimestampMixin
+from src.common.mixins.timestamp_mixin import TimestampMixin
+
 organization_activity = Table(
-    'organization_activity', Base.metadata,
-    Column('organization_id', ForeignKey('organization.id')),
-    Column('activity_id', ForeignKey('activity.id'))
+    "organization_activity",
+    Base.metadata,
+    Column("organization_id", ForeignKey("organization.id"), primary_key=True),
+    Column("activity_id", ForeignKey("activity.id"), primary_key=True),
 )
 
+
 class Organization(TimestampMixin, Base):
-    __tablename__ = 'organization'
+    __tablename__ = "organization"
 
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String)
-
-    telephones = relationship('Telephone', back_populates='organization')
-    build_id = Column(Integer, ForeignKey('build.id'))
-    build = relationship('Build', back_populates='organizations')
-    activities = relationship('Activity', secondary=organization_activity, back_populates='organizations')
-
+    telephones = relationship("Telephone", back_populates="organization")
+    build_id = Column(Integer, ForeignKey("build.id"))
+    build = relationship("Build", back_populates="organizations")
+    activities = relationship(
+        "Activity", secondary=organization_activity, back_populates="organizations"
+    )

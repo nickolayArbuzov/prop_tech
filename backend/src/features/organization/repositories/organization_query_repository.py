@@ -226,32 +226,35 @@ class OrganizationQueryRepository:
             "limit": pagination.limit,
         }
                 
-    async def getByName(self, organization_id: int) -> Organization:
-        organization_query = text(
+    async def getByName(self) -> list[Organization]:
+        organizations_query = text(
             """
                 SELECT
                     "organization".id AS organization_id,
                     "organization".name AS organization_name
                 FROM "organization"
-                WHERE "organization".id = :organization_id
             """
         )
         rows = await self.session.execute(
-            organization_query, {"organization_id": organization_id}
+            organizations_query, 
         )
         column_headers = list(rows.keys())
         data = rows.fetchall()
         def map_query_result_to_json(data, column_headers):
-            result = {"organization": None}
+            result = {"organizations": []}
+            organization_map = {}
             for row in data:
                 organization_id = row[column_headers.index("organization_id")]
-                if result["organization"] is None:
-                    result["organization"] = {
+                if organization_id not in organization_map:
+                    organization_obj = {
                         "id": organization_id,
                         "name": row[column_headers.index("organization_name")],
                     }
-                    organization_obj = result["organization"]
+                    organization_map[organization_id] = organization_obj
+                    result['organizations'].append(organization_obj)
+                else:
+                    organization_obj = organization_map[organization_id]
             return result
         _, value = next(iter(map_query_result_to_json(data, column_headers).items()))
         return value
-    
+                

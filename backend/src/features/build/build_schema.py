@@ -1,6 +1,4 @@
-from pydantic import BaseModel, Field
-from datetime import datetime
-
+from pydantic import BaseModel
 
 
 class Build(BaseModel):
@@ -8,5 +6,6 @@ class Build(BaseModel):
     address: str
     latitude: str
     longitude: str
+
     class Config:
         orm_mode = True

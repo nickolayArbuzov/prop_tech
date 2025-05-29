@@ -108,10 +108,12 @@ getByNameDoc = {
         "description": "Successful response",
         "content": {
             "application/json": {
-                "example": {
-                    "name": "string",
-                    "id": 0
-                }
+                "example": [
+                    {
+                        "name": "string",
+                        "id": 0
+                    }
+                ]
             }
         }
     }
