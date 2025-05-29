@@ -24,7 +24,7 @@ from .organization_swagger import (
     getManyByActivityAllDoc,
     getByNameDoc,
 )
-from src.common.pagination import Pagination
+from src.common import Filters, Pagination, get_filters, get_pagination
 
 router = APIRouter()
 
@@ -33,7 +33,7 @@ router = APIRouter()
 async def getManyByBuilding(
     building_id: int,
     db: AsyncSession = Depends(get_read_db),
-    pagination: Pagination = Depends(),
+    pagination: Pagination = Depends(get_pagination),
 ):
     organization_query_repository = OrganizationQueryRepository(db)
     query = GetManyByBuildingQuery(building_id=building_id, pagination=pagination)
@@ -47,7 +47,7 @@ async def getManyByBuilding(
 async def getManyByActivity(
     activity_id: int,
     db: AsyncSession = Depends(get_read_db),
-    pagination: Pagination = Depends(),
+    pagination: Pagination = Depends(get_pagination),
 ):
     organization_query_repository = OrganizationQueryRepository(db)
     query = GetManyByActivityQuery(activity_id=activity_id, pagination=pagination)
@@ -67,19 +67,12 @@ async def getManyByGeolocation(db: AsyncSession = Depends(get_read_db)):
     return await use_case.execute(query)
 
 
-@router.get("/organizations/{organization_id}", responses=getOneByIdDoc)
-async def getOneById(organization_id: int, db: AsyncSession = Depends(get_read_db)):
-    organization_query_repository = OrganizationQueryRepository(db)
-    query = GetOneByIdQuery(organization_id=organization_id)
-    use_case = GetOneByIdUseCase(organization_repository=organization_query_repository)
-    return await use_case.execute(query)
-
-
 @router.get(
     "/organizations/by-activity-tree/{activity_id}", responses=getManyByActivityAllDoc
 )
 async def getManyByActivityTree(
-    db: AsyncSession = Depends(get_read_db), pagination: Pagination = Depends()
+    db: AsyncSession = Depends(get_read_db),
+    pagination: Pagination = Depends(get_pagination),
 ):
     organization_query_repository = OrganizationQueryRepository(db)
     query = GetManyByActivityAllQuery(pagination=pagination)
@@ -90,8 +83,20 @@ async def getManyByActivityTree(
 
 
 @router.get("/organizations/search", responses=getByNameDoc)
-async def getByName(db: AsyncSession = Depends(get_read_db)):
+async def getByName(
+    db: AsyncSession = Depends(get_read_db),
+    pagination: Pagination = Depends(get_pagination),
+    filters: Filters = Depends(get_filters),
+):
     organization_query_repository = OrganizationQueryRepository(db)
-    query = GetByNameQuery()
+    query = GetByNameQuery(pagination=pagination, filters=filters)
     use_case = GetByNameUseCase(organization_repository=organization_query_repository)
+    return await use_case.execute(query)
+
+
+@router.get("/organizations/{organization_id}", responses=getOneByIdDoc)
+async def getOneById(organization_id: int, db: AsyncSession = Depends(get_read_db)):
+    organization_query_repository = OrganizationQueryRepository(db)
+    query = GetOneByIdQuery(organization_id=organization_id)
+    use_case = GetOneByIdUseCase(organization_repository=organization_query_repository)
     return await use_case.execute(query)

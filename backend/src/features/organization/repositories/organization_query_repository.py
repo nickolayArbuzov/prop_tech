@@ -1,14 +1,15 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import text
-from ..organization_model import Organization
-from src.common.pagination import Pagination
+from src.common import Pagination, Filters
 
 
 class OrganizationQueryRepository:
     def __init__(self, session: AsyncSession):
         self.session = session
 
-    async def getManyByBuilding(self, building_id: int, pagination: Pagination) -> dict:
+    async def getManyByBuilding(
+        self, building_id: int, pagination: Pagination
+    ) -> list[dict]:
         offset = (pagination.page - 1) * pagination.limit
         total_count = await self.session.scalar(
             text('SELECT COUNT(*) FROM "organization" WHERE build_id = :building_id'),
@@ -59,7 +60,9 @@ class OrganizationQueryRepository:
             "limit": pagination.limit,
         }
 
-    async def getManyByActivity(self, activity_id: int, pagination: Pagination) -> dict:
+    async def getManyByActivity(
+        self, activity_id: int, pagination: Pagination
+    ) -> list[dict]:
         offset = (pagination.page - 1) * pagination.limit
         total_count = await self.session.scalar(
             text(
@@ -123,7 +126,7 @@ class OrganizationQueryRepository:
             "limit": pagination.limit,
         }
 
-    async def getManyByGeo(self) -> list[Organization]:
+    async def getManyByGeo(self) -> list[dict]:
         organizations_query = text(
             """
                 SELECT
@@ -157,7 +160,7 @@ class OrganizationQueryRepository:
         _, value = next(iter(map_query_result_to_json(data, column_headers).items()))
         return value
 
-    async def getOneById(self, organization_id: int) -> Organization:
+    async def getOneById(self, organization_id: int) -> dict:
         organization_query = text(
             """
                 SELECT
@@ -233,7 +236,7 @@ class OrganizationQueryRepository:
         _, value = next(iter(map_query_result_to_json(data, column_headers).items()))
         return value
 
-    async def getManyByActivityAll(self, pagination: Pagination) -> dict:
+    async def getManyByActivityAll(self, pagination: Pagination) -> list[dict]:
         offset = (pagination.page - 1) * pagination.limit
         total_count = await self.session.scalar(
             text('SELECT COUNT(*) FROM "organization"')
@@ -281,18 +284,32 @@ class OrganizationQueryRepository:
             "limit": pagination.limit,
         }
 
-    async def getByName(self) -> list[Organization]:
+    async def getByName(self, pagination: Pagination, filters: Filters) -> list[dict]:
+        offset = (pagination.page - 1) * pagination.limit
+        where_clause = ""
+        params = {"offset": offset, "limit": pagination.limit}
+        if filters.name:
+            where_clause = "WHERE name ILIKE :name"
+            params["name"] = f"%{filters.name}%"
+
+        total_count = await self.session.scalar(
+            text(f'SELECT COUNT(*) FROM "organization" {where_clause}'), params
+        )
         organizations_query = text(
-            """
+            f"""
+                WITH paginated_organizations AS (
+                    SELECT id, name
+                    FROM "organization"
+                    {where_clause}
+                    LIMIT :limit OFFSET :offset
+                )
                 SELECT
-                    "organization".id AS organization_id,
-                    "organization".name AS organization_name
-                FROM "organization"
+                    "paginated_organizations".id AS organization_id,
+                    "paginated_organizations".name AS organization_name
+                FROM "paginated_organizations"
             """
         )
-        rows = await self.session.execute(
-            organizations_query,
-        )
+        rows = await self.session.execute(organizations_query, params)
         column_headers = list(rows.keys())
         data = rows.fetchall()
 
@@ -313,4 +330,9 @@ class OrganizationQueryRepository:
             return result
 
         _, value = next(iter(map_query_result_to_json(data, column_headers).items()))
-        return value
+        return {
+            "data": value,
+            "total": total_count,
+            "page": pagination.page,
+            "limit": pagination.limit,
+        }
