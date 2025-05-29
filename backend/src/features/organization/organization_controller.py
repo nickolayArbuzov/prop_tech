@@ -45,10 +45,12 @@ async def getManyByBuilding(
 
 @router.get("/organizations/by-activity/{activity_id}", responses=getManyByActivityDoc)
 async def getManyByActivity(
-    db: AsyncSession = Depends(get_read_db), pagination: Pagination = Depends()
+    activity_id: int,
+    db: AsyncSession = Depends(get_read_db),
+    pagination: Pagination = Depends(),
 ):
     organization_query_repository = OrganizationQueryRepository(db)
-    query = GetManyByActivityQuery(pagination=pagination)
+    query = GetManyByActivityQuery(activity_id=activity_id, pagination=pagination)
     use_case = GetManyByActivityUseCase(
         organization_repository=organization_query_repository
     )

@@ -59,26 +59,42 @@ class OrganizationQueryRepository:
             "limit": pagination.limit,
         }
 
-    async def getManyByActivity(self, pagination: Pagination) -> dict:
+    async def getManyByActivity(self, activity_id: int, pagination: Pagination) -> dict:
         offset = (pagination.page - 1) * pagination.limit
         total_count = await self.session.scalar(
-            text('SELECT COUNT(*) FROM "organization"')
+            text(
+                """
+                    SELECT COUNT(*)
+                    FROM organization
+                    JOIN organization_activity ON organization.id = organization_activity.organization_id
+                    WHERE organization_activity.activity_id = :activity_id
+                """
+            ),
+            {"activity_id": activity_id},
         )
         organizations_query = text(
             """
                 WITH paginated_organizations AS (
-                    SELECT id, name
-                    FROM "organization"
+                    SELECT o.id, o.name
+                    FROM organization o
+                    JOIN organization_activity oa ON o.id = oa.organization_id
+                    WHERE oa.activity_id = :activity_id
                     LIMIT :limit OFFSET :offset
                 )
                 SELECT
-                    "paginated_organizations".id AS organization_id,
-                    "paginated_organizations".name AS organization_name
-                FROM "paginated_organizations"
+                    paginated_organizations.id AS organization_id,
+                    paginated_organizations.name AS organization_name
+                FROM paginated_organizations
             """
         )
+
         rows = await self.session.execute(
-            organizations_query, {"offset": offset, "limit": pagination.limit}
+            organizations_query,
+            {
+                "activity_id": activity_id,
+                "offset": offset,
+                "limit": pagination.limit,
+            },
         )
         column_headers = list(rows.keys())
         data = rows.fetchall()
