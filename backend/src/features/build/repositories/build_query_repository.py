@@ -1,7 +1,7 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import text
-from ..build_model import Build
 from src.common.pagination import Pagination
+
 
 class BuildQueryRepository:
     def __init__(self, session: AsyncSession):
@@ -30,6 +30,7 @@ class BuildQueryRepository:
         )
         column_headers = list(rows.keys())
         data = rows.fetchall()
+
         def map_query_result_to_json(data, column_headers):
             result = {"builds": []}
             build_map = {}
@@ -43,10 +44,11 @@ class BuildQueryRepository:
                         "longitude": row[column_headers.index("build_longitude")],
                     }
                     build_map[build_id] = build_obj
-                    result['builds'].append(build_obj)
+                    result["builds"].append(build_obj)
                 else:
                     build_obj = build_map[build_id]
             return result
+
         _, value = next(iter(map_query_result_to_json(data, column_headers).items()))
         return {
             "data": value,
@@ -54,4 +56,3 @@ class BuildQueryRepository:
             "page": pagination.page,
             "limit": pagination.limit,
         }
-                
