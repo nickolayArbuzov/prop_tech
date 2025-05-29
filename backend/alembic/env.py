@@ -9,14 +9,14 @@ from pathlib import Path
 
 load_dotenv(dotenv_path=Path(__file__).resolve().parent.parent.parent / ".env")
 
-from src.settings import postgresql_connection
+from src.settings import postgresql_settings
 from src.models import Base
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
 config = context.config
 config.set_main_option(
-    "sqlalchemy.url", postgresql_connection.database_url.replace("+asyncpg", "")
+    "sqlalchemy.url", postgresql_settings.postgresql_url.replace("+asyncpg", "")
 )
 # Interpret the config file for Python logging.
 # This line sets up loggers basically.

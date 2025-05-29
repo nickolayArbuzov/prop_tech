@@ -1,7 +1,7 @@
 from pydantic_settings import BaseSettings
 
 
-class Database(BaseSettings):
+class PostgresqlSettings(BaseSettings):
     POSTGRES_USER: str
     POSTGRES_PASSWORD: str
     POSTGRES_DB: str
@@ -9,7 +9,7 @@ class Database(BaseSettings):
     POSTGRES_HOST: str
 
     @property
-    def database_url(self) -> str:
+    def postgresql_url(self) -> str:
         return (
             f"postgresql+asyncpg://{self.POSTGRES_USER}:{self.POSTGRES_PASSWORD}@"
             f"{self.POSTGRES_HOST}:{self.POSTGRES_PORT}/{self.POSTGRES_DB}"
@@ -19,4 +19,4 @@ class Database(BaseSettings):
         extra = "ignore"
 
 
-database_connection = Database()
+postgresql_settings = PostgresqlSettings()

@@ -5,16 +5,15 @@ ENV PYTHONUNBUFFERED 1
 
 WORKDIR /app
 
-RUN apt-get update && apt-get install -y gcc python3-dev
+RUN apt-get update && apt-get install -y gcc python3-dev netcat-openbsd
 
 COPY requirements.txt .
-COPY .env .
 
 RUN pip install --no-cache-dir -r requirements.txt
 
 COPY . .
 
-EXPOSE 5000
+COPY entrypoint.sh /entrypoint.sh
+RUN chmod +x /entrypoint.sh
 
-CMD ["uvicorn", "main:app", "--reload", "--host", "0.0.0.0", "--port", "5000"]
-
+ENTRYPOINT ["/entrypoint.sh"]

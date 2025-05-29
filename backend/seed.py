@@ -4,13 +4,14 @@ from datetime import datetime
 from geoalchemy2.shape import from_shape
 from shapely.geometry import Point
 
-from src.database import async_session
+from src.database import AsyncSessionLocal
 from src.features.build.build_model import Build
-from src.features.organization.organization_model import Organization
+from src.features.organization.organization_model import (
+    Organization,
+    organization_activity,
+)
 from src.features.telephone.telephone_model import Telephone
 from src.features.activity.activity_model import Activity
-from src.features.organization.organization_model import organization_activity
-
 
 ADDRESSES_WITH_COORDS = [
     ("Москва, ул. Арбат, д. 12", (55.752023, 37.586397)),
@@ -46,41 +47,36 @@ ORGANIZATION_NAMES = [
     "ПромИнжСервис",
     "Сити-Дент",
     "Бизнес Решения",
-    "Интеллект-Софт",
-    "СканЭнерго",
-    "Архитектура Про",
-    "УК Городская Среда",
 ]
 
-
 ACTIVITY_TREE = [
-    ("Информационные технологии", None),
-    ("Разработка ПО", "Информационные технологии"),
-    ("Веб-разработка", "Разработка ПО"),
-    ("Мобильная разработка", "Разработка ПО"),
-    ("Системное программирование", "Разработка ПО"),
-    ("Строительство", None),
-    ("Жилищное строительство", "Строительство"),
-    ("Капитальный ремонт", "Жилищное строительство"),
-    ("Фасадные работы", "Жилищное строительство"),
-    ("Инженерные сети", "Жилищное строительство"),
-    ("Здравоохранение", None),
-    ("Стоматология", "Здравоохранение"),
-    ("Терапевтическая стоматология", "Стоматология"),
-    ("Хирургическая стоматология", "Стоматология"),
-    ("Ортодонтия", "Стоматология"),
-    ("Промышленное производство", None),
-    ("Пищевая промышленность", "Промышленное производство"),
-    ("Производство хлебобулочных изделий", "Пищевая промышленность"),
-    ("Производство молочной продукции", "Пищевая промышленность"),
-    ("Производство мясных изделий", "Пищевая промышленность"),
-    ("Металлообработка", "Промышленное производство"),
-    ("Машиностроение", "Промышленное производство"),
+    {"id": 1, "name": "Информационные технологии", "parent_id": None},
+    {"id": 2, "name": "Разработка ПО", "parent_id": 1},
+    {"id": 3, "name": "Веб-разработка", "parent_id": 2},
+    {"id": 4, "name": "Мобильная разработка", "parent_id": 2},
+    {"id": 5, "name": "Системное программирование", "parent_id": 2},
+    {"id": 6, "name": "Строительство", "parent_id": None},
+    {"id": 7, "name": "Жилищное строительство", "parent_id": 6},
+    {"id": 8, "name": "Капитальный ремонт", "parent_id": 7},
+    {"id": 9, "name": "Фасадные работы", "parent_id": 7},
+    {"id": 10, "name": "Инженерные сети", "parent_id": 7},
+    {"id": 11, "name": "Здравоохранение", "parent_id": None},
+    {"id": 12, "name": "Стоматология", "parent_id": 11},
+    {"id": 13, "name": "Терапевтическая стоматология", "parent_id": 12},
+    {"id": 14, "name": "Хирургическая стоматология", "parent_id": 12},
+    {"id": 15, "name": "Ортодонтия", "parent_id": 12},
+    {"id": 16, "name": "Промышленное производство", "parent_id": None},
+    {"id": 17, "name": "Пищевая промышленность", "parent_id": 16},
+    {"id": 18, "name": "Производство хлебобулочных изделий", "parent_id": 17},
+    {"id": 19, "name": "Производство молочной продукции", "parent_id": 17},
+    {"id": 20, "name": "Производство мясных изделий", "parent_id": 17},
+    {"id": 21, "name": "Металлообработка", "parent_id": 16},
+    {"id": 22, "name": "Машиностроение", "parent_id": 16},
 ]
 
 
 async def seed():
-    async with async_session() as session:
+    async with AsyncSessionLocal() as session:
         async with session.begin():
 
             builds = []
@@ -94,20 +90,27 @@ async def seed():
                 session.add(b)
                 builds.append(b)
 
-            name_to_activity = {}
-            for name, parent_name in ACTIVITY_TREE:
+            activities_by_id = {}
+            for activity_data in ACTIVITY_TREE:
                 activity = Activity(
-                    name=name,
-                    parent=name_to_activity.get(parent_name),
+                    id=activity_data["id"],
+                    name=activity_data["name"],
                     created_at=datetime.utcnow(),
                     updated_at=datetime.utcnow(),
                 )
-                session.add(activity)
-                name_to_activity[name] = activity
+                activities_by_id[activity_data["id"]] = activity
+
+            for activity_data in ACTIVITY_TREE:
+                parent_id = activity_data["parent_id"]
+                if parent_id:
+                    activities_by_id[activity_data["id"]].parent = activities_by_id[
+                        parent_id
+                    ]
+
+            session.add_all(activities_by_id.values())
 
             organizations = []
-            org_names = ORGANIZATION_NAMES[:20]
-            for name in org_names:
+            for name in ORGANIZATION_NAMES[:20]:
                 org = Organization(
                     name=name,
                     build=random.choice(builds),
@@ -116,6 +119,8 @@ async def seed():
                 )
                 session.add(org)
                 organizations.append(org)
+
+            await session.flush()
 
             for org in organizations:
                 for _ in range(random.randint(1, 3)):
@@ -127,7 +132,18 @@ async def seed():
                     )
                     session.add(phone)
 
-            leaf_activities = [a for a in name_to_activity.values() if not a.children]
+            used_as_parent_ids = {
+                activity["parent_id"]
+                for activity in ACTIVITY_TREE
+                if activity["parent_id"] is not None
+            }
+
+            leaf_activities = [
+                act
+                for act_id, act in activities_by_id.items()
+                if act_id not in used_as_parent_ids
+            ]
+
             for org in organizations:
                 chosen = random.sample(leaf_activities, k=random.randint(1, 3))
                 for act in chosen:

@@ -11,7 +11,6 @@ from typing import Sequence, Union
 from alembic import op
 import sqlalchemy as sa
 from geoalchemy2 import Geography
-from sqlalchemy.dialects.postgresql import Gist
 
 # revision identifiers, used by Alembic.
 revision: str = "248dd87e5dc2"
@@ -21,7 +20,7 @@ depends_on: Union[str, Sequence[str], None] = None
 
 
 def upgrade() -> None:
-
+    op.execute("CREATE EXTENSION IF NOT EXISTS postgis")
     op.create_table(
         "build",
         sa.Column("id", sa.Integer(), primary_key=True, index=True),
