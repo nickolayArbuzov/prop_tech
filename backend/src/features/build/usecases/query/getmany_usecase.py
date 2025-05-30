@@ -1,9 +1,11 @@
 from ...repositories import BuildQueryRepository
-from src.common.pagination import Pagination
+from src.common import Pagination
+
 
 class GetManyQuery:
     def __init__(self, pagination: Pagination):
         self.pagination = pagination
+
 
 class GetManyUseCase:
     def __init__(self, build_repository: BuildQueryRepository):

@@ -1,9 +1,9 @@
 from ...repositories import OrganizationQueryRepository
-from src.common import Pagination, Filters
+from src.common import Pagination, FilterByName
 
 
 class GetByNameQuery:
-    def __init__(self, pagination: Pagination, filters: Filters):
+    def __init__(self, pagination: Pagination, filters: FilterByName):
         self.pagination = pagination
         self.filters = filters
 

@@ -1,4 +1,8 @@
-from .filters import Filters, get_filters
-from .pagination import Pagination, get_pagination
+from .filters import FilterByName, FilterByLocation
+from .pagination import Pagination
 
-__all__ = [Filters, Pagination, get_filters, get_pagination]
+__all__ = [
+    FilterByName,
+    FilterByLocation,
+    Pagination,
+]

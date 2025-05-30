@@ -1,6 +1,6 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import text
-from src.common.pagination import Pagination
+from src.common import Pagination
 
 
 class BuildQueryRepository:

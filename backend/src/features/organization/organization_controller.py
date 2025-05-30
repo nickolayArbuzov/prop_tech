@@ -24,7 +24,7 @@ from .organization_swagger import (
     getManyByActivityAllDoc,
     getByNameDoc,
 )
-from src.common import Filters, Pagination, get_filters, get_pagination
+from src.common import FilterByName, FilterByLocation, Pagination
 
 router = APIRouter()
 
@@ -33,7 +33,7 @@ router = APIRouter()
 async def getManyByBuilding(
     building_id: int,
     db: AsyncSession = Depends(get_read_db),
-    pagination: Pagination = Depends(get_pagination),
+    pagination: Pagination = Depends(),
 ):
     organization_query_repository = OrganizationQueryRepository(db)
     query = GetManyByBuildingQuery(building_id=building_id, pagination=pagination)
@@ -47,7 +47,7 @@ async def getManyByBuilding(
 async def getManyByActivity(
     activity_id: int,
     db: AsyncSession = Depends(get_read_db),
-    pagination: Pagination = Depends(get_pagination),
+    pagination: Pagination = Depends(),
 ):
     organization_query_repository = OrganizationQueryRepository(db)
     query = GetManyByActivityQuery(activity_id=activity_id, pagination=pagination)
@@ -58,9 +58,11 @@ async def getManyByActivity(
 
 
 @router.get("/organizations/by-geolocation", responses=getManyByGeoDoc)
-async def getManyByGeolocation(db: AsyncSession = Depends(get_read_db)):
+async def getManyByGeolocation(
+    db: AsyncSession = Depends(get_read_db), location: FilterByLocation = Depends()
+):
     organization_query_repository = OrganizationQueryRepository(db)
-    query = GetManyByGeoQuery()
+    query = GetManyByGeoQuery(location=location)
     use_case = GetManyByGeoUseCase(
         organization_repository=organization_query_repository
     )
@@ -72,7 +74,7 @@ async def getManyByGeolocation(db: AsyncSession = Depends(get_read_db)):
 )
 async def getManyByActivityTree(
     db: AsyncSession = Depends(get_read_db),
-    pagination: Pagination = Depends(get_pagination),
+    pagination: Pagination = Depends(),
 ):
     organization_query_repository = OrganizationQueryRepository(db)
     query = GetManyByActivityAllQuery(pagination=pagination)
@@ -85,8 +87,8 @@ async def getManyByActivityTree(
 @router.get("/organizations/search", responses=getByNameDoc)
 async def getByName(
     db: AsyncSession = Depends(get_read_db),
-    pagination: Pagination = Depends(get_pagination),
-    filters: Filters = Depends(get_filters),
+    pagination: Pagination = Depends(),
+    filters: FilterByName = Depends(),
 ):
     organization_query_repository = OrganizationQueryRepository(db)
     query = GetByNameQuery(pagination=pagination, filters=filters)

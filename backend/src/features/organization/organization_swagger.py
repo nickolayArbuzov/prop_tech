@@ -33,7 +33,14 @@ getManyByActivityDoc = {
 getManyByGeoDoc = {
     200: {
         "description": "Successful response",
-        "content": {"application/json": {"example": [{"name": "string", "id": 0}]}},
+        "content": {
+            "application/json": {
+                "example": {
+                    "data": [{"name": "string", "id": 0}],
+                    "total": 0,
+                }
+            }
+        },
     }
 }
 

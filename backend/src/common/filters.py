@@ -1,15 +1,14 @@
 from typing import Optional
-from fastapi import Query
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 
-class Filters(BaseModel):
-    name: Optional[str] = None
-
-
-def get_filters(
-    name: Optional[str] = Query(
-        None, min_length=1, description="Name of organization to search"
+class FilterByName(BaseModel):
+    name: Optional[str] = Field(
+        None, min_length=1, description="Organization name to search"
     )
-) -> Filters:
-    return Filters(name=name)
+
+
+class FilterByLocation(BaseModel):
+    latitude: Optional[float] = Field(None, description="Latitude in WGS84")
+    longitude: Optional[float] = Field(None, description="Longitude in WGS84")
+    radius: Optional[float] = Field(None, gt=0, description="Search radius in meters")

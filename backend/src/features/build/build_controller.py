@@ -4,7 +4,7 @@ from src.dependencies import get_read_db
 from .usecases.query import GetManyUseCase, GetManyQuery
 from .repositories import BuildQueryRepository
 from .build_swagger import getManyDoc
-from src.common.pagination import Pagination
+from src.common import Pagination
 
 router = APIRouter()
 

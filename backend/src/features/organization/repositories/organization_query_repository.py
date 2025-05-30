@@ -1,6 +1,6 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import text
-from src.common import Pagination, Filters
+from src.common import Pagination, FilterByName, FilterByLocation
 
 
 class OrganizationQueryRepository:
@@ -126,17 +126,52 @@ class OrganizationQueryRepository:
             "limit": pagination.limit,
         }
 
-    async def getManyByGeo(self) -> list[dict]:
+    async def getManyByGeo(self, location: FilterByLocation) -> list[dict]:
+        if not (location.latitude and location.longitude and location.radius):
+            return [
+                {
+                    "data": [],
+                    "total": 0,
+                }
+            ]
+        params = {
+            "lat": location.latitude,
+            "lon": location.longitude,
+            "radius": location.radius,
+        }
+        total_count = await self.session.scalar(
+            text(
+                """
+                    SELECT COUNT(*)
+                    FROM "organization"
+                    JOIN "build" ON "build".id = "organization".build_id
+                    WHERE ST_DWithin(
+                        "build".location,
+                        ST_SetSRID(ST_MakePoint(:lon, :lat), 4326)::geography,
+                        :radius
+                    )
+                """
+            ),
+            params,
+        )
         organizations_query = text(
             """
                 SELECT
                     "organization".id AS organization_id,
                     "organization".name AS organization_name
-                FROM "organization"
+                FROM organization
+                JOIN build ON "build".id = "organization".build_id
+                WHERE ST_DWithin(
+                    "build".location,
+                    ST_SetSRID(ST_MakePoint(:lon, :lat), 4326)::geography,
+                    :radius
+                )
             """
         )
+
         rows = await self.session.execute(
             organizations_query,
+            params,
         )
         column_headers = list(rows.keys())
         data = rows.fetchall()
@@ -158,7 +193,11 @@ class OrganizationQueryRepository:
             return result
 
         _, value = next(iter(map_query_result_to_json(data, column_headers).items()))
-        return value
+
+        return {
+            "data": value,
+            "total": total_count,
+        }
 
     async def getOneById(self, organization_id: int) -> dict:
         organization_query = text(
@@ -284,7 +323,9 @@ class OrganizationQueryRepository:
             "limit": pagination.limit,
         }
 
-    async def getByName(self, pagination: Pagination, filters: Filters) -> list[dict]:
+    async def getByName(
+        self, pagination: Pagination, filters: FilterByName
+    ) -> list[dict]:
         offset = (pagination.page - 1) * pagination.limit
         where_clause = ""
         params = {"offset": offset, "limit": pagination.limit}
