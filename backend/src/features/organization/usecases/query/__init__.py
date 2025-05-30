@@ -1,6 +1,6 @@
 from .getmanybygeo_usecase import GetManyByGeoUseCase, GetManyByGeoQuery
 from .getmanybyactivity_usecase import GetManyByActivityUseCase, GetManyByActivityQuery
-from .getbyname_usecase import GetByNameUseCase, GetByNameQuery
+from .getmanybyname_usecase import GetManyByNameUseCase, GetManyByNameQuery
 from .getmanybybuilding_usecase import GetManyByBuildingUseCase, GetManyByBuildingQuery
 from .getonebyid_usecase import GetOneByIdUseCase, GetOneByIdQuery
 from .getmanybyactivitytree_usecase import (
@@ -19,6 +19,6 @@ __all__ = [
     GetManyByGeoQuery,
     GetManyByActivityUseCase,
     GetManyByActivityQuery,
-    GetByNameUseCase,
-    GetByNameQuery,
+    GetManyByNameUseCase,
+    GetManyByNameQuery,
 ]

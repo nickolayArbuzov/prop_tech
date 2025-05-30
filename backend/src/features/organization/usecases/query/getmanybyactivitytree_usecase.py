@@ -13,7 +13,7 @@ class GetManyByActivityTreeUseCase:
         self.organization_repository = organization_repository
 
     async def execute(self, query: GetManyByActivityTreeQuery):
-        organization = await self.organization_repository.getManyByActivityTree(
+        organization = await self.organization_repository.get_many_by_activity_tree(
             query.activity_id, query.pagination
         )
         return organization

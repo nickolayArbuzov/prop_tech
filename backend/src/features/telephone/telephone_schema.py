@@ -1,10 +1,12 @@
 from pydantic import BaseModel
 
 
-class Telephone(BaseModel):
-    id: int
+class TelephoneInDB(BaseModel):
     phone_number: str
-    organization_id: int
 
     class Config:
         orm_mode = True
+
+
+class ResponseTelephone(TelephoneInDB):
+    id: int

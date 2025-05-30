@@ -12,5 +12,5 @@ class GetManyUseCase:
         self.build_repository = build_repository
 
     async def execute(self, query: GetManyQuery):
-        build = await self.build_repository.getMany(query.pagination)
+        build = await self.build_repository.get_many(query.pagination)
         return build

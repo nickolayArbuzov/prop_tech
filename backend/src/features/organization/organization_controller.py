@@ -1,5 +1,6 @@
 from fastapi import APIRouter, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
+from .organization_schema import ResponseOrganization, OrganizationDetail
 from src.dependencies import get_read_db
 from .usecases.query import (
     GetManyByBuildingUseCase,
@@ -12,25 +13,26 @@ from .usecases.query import (
     GetOneByIdQuery,
     GetManyByActivityTreeUseCase,
     GetManyByActivityTreeQuery,
-    GetByNameUseCase,
-    GetByNameQuery,
+    GetManyByNameUseCase,
+    GetManyByNameQuery,
 )
 from .repositories import OrganizationQueryRepository
-from .organization_swagger import (
-    getManyByBuildingDoc,
-    getManyByActivityDoc,
-    getManyByGeoDoc,
-    getOneByIdDoc,
-    getManyByActivityTreeDoc,
-    getByNameDoc,
+from src.common import (
+    FilterByName,
+    FilterByLocation,
+    Pagination,
+    WithPaginationResponse,
+    WithTotalCountResponse,
 )
-from src.common import FilterByName, FilterByLocation, Pagination
 
 router = APIRouter()
 
 
-@router.get("/organizations/by-building/{building_id}", responses=getManyByBuildingDoc)
-async def getManyByBuilding(
+@router.get(
+    "/organizations/by-building/{building_id}",
+    response_model=WithPaginationResponse[ResponseOrganization],
+)
+async def get_many_by_building(
     building_id: int,
     db: AsyncSession = Depends(get_read_db),
     pagination: Pagination = Depends(),
@@ -43,8 +45,11 @@ async def getManyByBuilding(
     return await use_case.execute(query)
 
 
-@router.get("/organizations/by-activity/{activity_id}", responses=getManyByActivityDoc)
-async def getManyByActivity(
+@router.get(
+    "/organizations/by-activity/{activity_id}",
+    response_model=WithPaginationResponse[ResponseOrganization],
+)
+async def get_many_by_activity(
     activity_id: int,
     db: AsyncSession = Depends(get_read_db),
     pagination: Pagination = Depends(),
@@ -57,8 +62,11 @@ async def getManyByActivity(
     return await use_case.execute(query)
 
 
-@router.get("/organizations/by-geolocation", responses=getManyByGeoDoc)
-async def getManyByGeolocation(
+@router.get(
+    "/organizations/by-geolocation",
+    response_model=WithTotalCountResponse[ResponseOrganization],
+)
+async def get_many_by_geo(
     db: AsyncSession = Depends(get_read_db), location: FilterByLocation = Depends()
 ):
     organization_query_repository = OrganizationQueryRepository(db)
@@ -70,9 +78,10 @@ async def getManyByGeolocation(
 
 
 @router.get(
-    "/organizations/by-activity-tree/{activity_id}", responses=getManyByActivityTreeDoc
+    "/organizations/by-activity-tree/{activity_id}",
+    response_model=WithPaginationResponse[ResponseOrganization],
 )
-async def getManyByActivityTree(
+async def get_many_by_activity_tree(
     activity_id: int,
     db: AsyncSession = Depends(get_read_db),
     pagination: Pagination = Depends(),
@@ -85,20 +94,25 @@ async def getManyByActivityTree(
     return await use_case.execute(query)
 
 
-@router.get("/organizations/search", responses=getByNameDoc)
-async def getByName(
+@router.get(
+    "/organizations/search",
+    response_model=WithPaginationResponse[ResponseOrganization],
+)
+async def get_many_by_name(
     db: AsyncSession = Depends(get_read_db),
     pagination: Pagination = Depends(),
     filters: FilterByName = Depends(),
 ):
     organization_query_repository = OrganizationQueryRepository(db)
-    query = GetByNameQuery(pagination=pagination, filters=filters)
-    use_case = GetByNameUseCase(organization_repository=organization_query_repository)
+    query = GetManyByNameQuery(pagination=pagination, filters=filters)
+    use_case = GetManyByNameUseCase(
+        organization_repository=organization_query_repository
+    )
     return await use_case.execute(query)
 
 
-@router.get("/organizations/{organization_id}", responses=getOneByIdDoc)
-async def getOneById(organization_id: int, db: AsyncSession = Depends(get_read_db)):
+@router.get("/organizations/{organization_id}", response_model=OrganizationDetail)
+async def get_one_by_id(organization_id: int, db: AsyncSession = Depends(get_read_db)):
     organization_query_repository = OrganizationQueryRepository(db)
     query = GetOneByIdQuery(organization_id=organization_id)
     use_case = GetOneByIdUseCase(organization_repository=organization_query_repository)

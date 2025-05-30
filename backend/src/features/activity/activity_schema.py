@@ -1,10 +1,12 @@
 from pydantic import BaseModel
 
 
-class Activity(BaseModel):
-    id: int
+class ActivityInDB(BaseModel):
     name: str
-    organization_id: int
 
     class Config:
         orm_mode = True
+
+
+class ResponseActivity(ActivityInDB):
+    id: int

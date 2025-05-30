@@ -7,7 +7,7 @@ class BuildQueryRepository:
     def __init__(self, session: AsyncSession):
         self.session = session
 
-    async def getMany(self, pagination: Pagination) -> dict:
+    async def get_many(self, pagination: Pagination) -> dict:
         offset = (pagination.page - 1) * pagination.limit
         total_count = await self.session.scalar(text('SELECT COUNT(*) FROM "build"'))
         builds_query = text(

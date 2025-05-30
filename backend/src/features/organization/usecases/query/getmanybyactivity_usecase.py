@@ -13,7 +13,7 @@ class GetManyByActivityUseCase:
         self.organization_repository = organization_repository
 
     async def execute(self, query: GetManyByActivityQuery):
-        organization = await self.organization_repository.getManyByActivity(
+        organization = await self.organization_repository.get_many_by_activity(
             query.activity_id, query.pagination
         )
         return organization

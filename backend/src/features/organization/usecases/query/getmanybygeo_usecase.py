@@ -12,5 +12,7 @@ class GetManyByGeoUseCase:
         self.organization_repository = organization_repository
 
     async def execute(self, query: GetManyByGeoQuery):
-        organization = await self.organization_repository.getManyByGeo(query.location)
+        organization = await self.organization_repository.get_many_by_geo(
+            query.location
+        )
         return organization

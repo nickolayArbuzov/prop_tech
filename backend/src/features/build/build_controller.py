@@ -1,16 +1,16 @@
 from fastapi import APIRouter, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
+from .build_schema import ResponseBuild
 from src.dependencies import get_read_db
 from .usecases.query import GetManyUseCase, GetManyQuery
 from .repositories import BuildQueryRepository
-from .build_swagger import getManyDoc
-from src.common import Pagination
+from src.common import Pagination, WithPaginationResponse
 
 router = APIRouter()
 
 
-@router.get("/builds", responses=getManyDoc)
-async def getMany(
+@router.get("/builds", response_model=WithPaginationResponse[ResponseBuild])
+async def get_many(
     db: AsyncSession = Depends(get_read_db), pagination: Pagination = Depends()
 ):
     build_query_repository = BuildQueryRepository(db)

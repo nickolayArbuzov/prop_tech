@@ -7,7 +7,7 @@ class OrganizationQueryRepository:
     def __init__(self, session: AsyncSession):
         self.session = session
 
-    async def getManyByBuilding(
+    async def get_many_by_building(
         self, building_id: int, pagination: Pagination
     ) -> list[dict]:
         offset = (pagination.page - 1) * pagination.limit
@@ -60,7 +60,7 @@ class OrganizationQueryRepository:
             "limit": pagination.limit,
         }
 
-    async def getManyByActivity(
+    async def get_many_by_activity(
         self, activity_id: int, pagination: Pagination
     ) -> list[dict]:
         offset = (pagination.page - 1) * pagination.limit
@@ -126,14 +126,13 @@ class OrganizationQueryRepository:
             "limit": pagination.limit,
         }
 
-    async def getManyByGeo(self, location: FilterByLocation) -> list[dict]:
+    async def get_many_by_geo(self, location: FilterByLocation) -> list[dict]:
         if not (location.latitude and location.longitude and location.radius):
-            return [
-                {
-                    "data": [],
-                    "total": 0,
-                }
-            ]
+            return {
+                "data": [],
+                "total": 0,
+            }
+
         params = {
             "lat": location.latitude,
             "lon": location.longitude,
@@ -199,7 +198,7 @@ class OrganizationQueryRepository:
             "total": total_count,
         }
 
-    async def getOneById(self, organization_id: int) -> dict:
+    async def get_one_by_id(self, organization_id: int) -> dict:
         organization_query = text(
             """
                 SELECT
@@ -239,6 +238,7 @@ class OrganizationQueryRepository:
                         "activities": [],
                         "build": (
                             {
+                                "id": row[column_headers.index("build_id")],
                                 "address": row[column_headers.index("build_address")],
                                 "latitude": row[column_headers.index("build_latitude")],
                                 "longitude": row[
@@ -275,7 +275,7 @@ class OrganizationQueryRepository:
         _, value = next(iter(map_query_result_to_json(data, column_headers).items()))
         return value
 
-    async def getManyByActivityTree(
+    async def get_many_by_activity_tree(
         self, activity_id: int, pagination: Pagination
     ) -> list[dict]:
         offset = (pagination.page - 1) * pagination.limit
@@ -352,7 +352,7 @@ class OrganizationQueryRepository:
             "limit": pagination.limit,
         }
 
-    async def getByName(
+    async def get_many_by_name(
         self, pagination: Pagination, filters: FilterByName
     ) -> list[dict]:
         offset = (pagination.page - 1) * pagination.limit

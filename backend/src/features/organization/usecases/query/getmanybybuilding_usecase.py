@@ -13,7 +13,7 @@ class GetManyByBuildingUseCase:
         self.organization_repository = organization_repository
 
     async def execute(self, query: GetManyByBuildingQuery):
-        organization = await self.organization_repository.getManyByBuilding(
+        organization = await self.organization_repository.get_many_by_building(
             query.building_id, query.pagination
         )
         return organization
