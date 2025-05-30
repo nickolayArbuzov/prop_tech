@@ -65,7 +65,7 @@ getOneByIdDoc = {
     }
 }
 
-getManyByActivityAllDoc = {
+getManyByActivityTreeDoc = {
     200: {
         "description": "Successful response",
         "content": {

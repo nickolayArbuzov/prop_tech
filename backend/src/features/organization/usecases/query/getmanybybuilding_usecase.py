@@ -1,5 +1,5 @@
 from ...repositories import OrganizationQueryRepository
-from src.common.pagination import Pagination
+from src.common import Pagination
 
 
 class GetManyByBuildingQuery:

@@ -10,8 +10,8 @@ from .usecases.query import (
     GetManyByGeoQuery,
     GetOneByIdUseCase,
     GetOneByIdQuery,
-    GetManyByActivityAllUseCase,
-    GetManyByActivityAllQuery,
+    GetManyByActivityTreeUseCase,
+    GetManyByActivityTreeQuery,
     GetByNameUseCase,
     GetByNameQuery,
 )
@@ -21,7 +21,7 @@ from .organization_swagger import (
     getManyByActivityDoc,
     getManyByGeoDoc,
     getOneByIdDoc,
-    getManyByActivityAllDoc,
+    getManyByActivityTreeDoc,
     getByNameDoc,
 )
 from src.common import FilterByName, FilterByLocation, Pagination
@@ -70,15 +70,16 @@ async def getManyByGeolocation(
 
 
 @router.get(
-    "/organizations/by-activity-tree/{activity_id}", responses=getManyByActivityAllDoc
+    "/organizations/by-activity-tree/{activity_id}", responses=getManyByActivityTreeDoc
 )
 async def getManyByActivityTree(
+    activity_id: int,
     db: AsyncSession = Depends(get_read_db),
     pagination: Pagination = Depends(),
 ):
     organization_query_repository = OrganizationQueryRepository(db)
-    query = GetManyByActivityAllQuery(pagination=pagination)
-    use_case = GetManyByActivityAllUseCase(
+    query = GetManyByActivityTreeQuery(activity_id=activity_id, pagination=pagination)
+    use_case = GetManyByActivityTreeUseCase(
         organization_repository=organization_query_repository
     )
     return await use_case.execute(query)

@@ -275,27 +275,56 @@ class OrganizationQueryRepository:
         _, value = next(iter(map_query_result_to_json(data, column_headers).items()))
         return value
 
-    async def getManyByActivityAll(self, pagination: Pagination) -> list[dict]:
+    async def getManyByActivityTree(
+        self, activity_id: int, pagination: Pagination
+    ) -> list[dict]:
         offset = (pagination.page - 1) * pagination.limit
+
+        params = {
+            "activity_id": activity_id,
+            "limit": pagination.limit,
+            "offset": offset,
+        }
+
+        recursive_cte = """
+            WITH RECURSIVE activity_tree AS (
+                SELECT id FROM activity WHERE id = :activity_id
+                UNION ALL
+                SELECT a.id
+                FROM activity a
+                JOIN activity_tree at ON a.parent_id = at.id
+            )
+        """
+
         total_count = await self.session.scalar(
-            text('SELECT COUNT(*) FROM "organization"')
+            text(
+                recursive_cte
+                + """
+                SELECT COUNT(DISTINCT o.id)
+                FROM organization o
+                JOIN organization_activity oa ON oa.organization_id = o.id
+                WHERE oa.activity_id IN (SELECT id FROM activity_tree)
+                """
+            ),
+            params,
         )
         organizations_query = text(
-            """
-                WITH paginated_organizations AS (
-                    SELECT id, name
-                    FROM "organization"
-                    LIMIT :limit OFFSET :offset
-                )
-                SELECT
-                    "paginated_organizations".id AS organization_id,
-                    "paginated_organizations".name AS organization_name
-                FROM "paginated_organizations"
+            recursive_cte
+            + """
+            , paginated_organizations AS (
+                SELECT DISTINCT o.id, o.name
+                FROM organization o
+                JOIN organization_activity oa ON oa.organization_id = o.id
+                WHERE oa.activity_id IN (SELECT id FROM activity_tree)
+                LIMIT :limit OFFSET :offset
+            )
+            SELECT
+                paginated_organizations.id AS organization_id,
+                paginated_organizations.name AS organization_name
+            FROM paginated_organizations
             """
         )
-        rows = await self.session.execute(
-            organizations_query, {"offset": offset, "limit": pagination.limit}
-        )
+        rows = await self.session.execute(organizations_query, params)
         column_headers = list(rows.keys())
         data = rows.fetchall()
 
