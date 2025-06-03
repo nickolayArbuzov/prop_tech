@@ -1,10 +1,15 @@
-from sqlalchemy import Integer, String, ForeignKey, Column
-from sqlalchemy import Table
-from sqlalchemy.orm import relationship
+from __future__ import annotations
 
+from typing import TYPE_CHECKING, List
+from sqlalchemy import Column, ForeignKey, Table
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 from src.database import Base
-
 from src.common.mixins.timestamp_mixin import TimestampMixin
+
+if TYPE_CHECKING:
+    from src.features.telephone.telephone_model import Telephone
+    from src.features.build.build_model import Build
+    from src.features.activity.activity_model import Activity
 
 organization_activity = Table(
     "organization_activity",
@@ -17,11 +22,14 @@ organization_activity = Table(
 class Organization(TimestampMixin, Base):
     __tablename__ = "organization"
 
-    id = Column(Integer, primary_key=True, index=True)
-    name = Column(String)
-    telephones = relationship("Telephone", back_populates="organization")
-    build_id = Column(Integer, ForeignKey("build.id"))
-    build = relationship("Build", back_populates="organizations")
-    activities = relationship(
-        "Activity", secondary=organization_activity, back_populates="organizations"
+    id: Mapped[int] = mapped_column(primary_key=True, index=True)
+    name: Mapped[str] = mapped_column()
+
+    build_id: Mapped[int] = mapped_column(ForeignKey("build.id"))
+    build: Mapped[Build] = relationship(back_populates="organizations")
+
+    telephones: Mapped[List[Telephone]] = relationship(back_populates="organization")
+
+    activities: Mapped[List[Activity]] = relationship(
+        secondary=organization_activity, back_populates="organizations"
     )

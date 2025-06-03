@@ -1,7 +1,7 @@
 from contextlib import asynccontextmanager
 from sqlalchemy.ext.asyncio import AsyncSession
 from typing import AsyncGenerator
-from .database import AsyncSessionLocal
+from ..database import AsyncSessionLocal
 
 
 @asynccontextmanager
@@ -23,4 +23,3 @@ async def get_read_db():
 async def get_write_db():
     async with session_scope(AsyncSessionLocal) as session:
         yield session
-

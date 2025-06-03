@@ -1,7 +1,12 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from sqlalchemy.orm import configure_mappers
 from src.features.organization import organization_controller
 from src.features.build import build_controller
+
+from src.models import Base
+
+configure_mappers()
 
 
 async def lifespan(app):

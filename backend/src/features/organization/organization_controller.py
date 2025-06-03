@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 from .organization_schema import ResponseOrganization, OrganizationDetail
-from src.dependencies import get_read_db
+from src.dependencies import get_read_db, verify_api_key
 from .usecases.query import (
     GetManyByBuildingUseCase,
     GetManyByBuildingQuery,
@@ -36,6 +36,7 @@ async def get_many_by_building(
     building_id: int,
     db: AsyncSession = Depends(get_read_db),
     pagination: Pagination = Depends(),
+    _api_key=Depends(verify_api_key),
 ):
     organization_query_repository = OrganizationQueryRepository(db)
     query = GetManyByBuildingQuery(building_id=building_id, pagination=pagination)
@@ -53,6 +54,7 @@ async def get_many_by_activity(
     activity_id: int,
     db: AsyncSession = Depends(get_read_db),
     pagination: Pagination = Depends(),
+    _api_key=Depends(verify_api_key),
 ):
     organization_query_repository = OrganizationQueryRepository(db)
     query = GetManyByActivityQuery(activity_id=activity_id, pagination=pagination)
@@ -67,7 +69,9 @@ async def get_many_by_activity(
     response_model=WithTotalCountResponse[ResponseOrganization],
 )
 async def get_many_by_geo(
-    db: AsyncSession = Depends(get_read_db), location: FilterByLocation = Depends()
+    db: AsyncSession = Depends(get_read_db),
+    location: FilterByLocation = Depends(),
+    _api_key=Depends(verify_api_key),
 ):
     organization_query_repository = OrganizationQueryRepository(db)
     query = GetManyByGeoQuery(location=location)
@@ -85,6 +89,7 @@ async def get_many_by_activity_tree(
     activity_id: int,
     db: AsyncSession = Depends(get_read_db),
     pagination: Pagination = Depends(),
+    _api_key=Depends(verify_api_key),
 ):
     organization_query_repository = OrganizationQueryRepository(db)
     query = GetManyByActivityTreeQuery(activity_id=activity_id, pagination=pagination)
@@ -102,6 +107,7 @@ async def get_many_by_name(
     db: AsyncSession = Depends(get_read_db),
     pagination: Pagination = Depends(),
     filters: FilterByName = Depends(),
+    _api_key=Depends(verify_api_key),
 ):
     organization_query_repository = OrganizationQueryRepository(db)
     query = GetManyByNameQuery(pagination=pagination, filters=filters)
@@ -112,7 +118,11 @@ async def get_many_by_name(
 
 
 @router.get("/organizations/{organization_id}", response_model=OrganizationDetail)
-async def get_one_by_id(organization_id: int, db: AsyncSession = Depends(get_read_db)):
+async def get_one_by_id(
+    organization_id: int,
+    db: AsyncSession = Depends(get_read_db),
+    _api_key=Depends(verify_api_key),
+):
     organization_query_repository = OrganizationQueryRepository(db)
     query = GetOneByIdQuery(organization_id=organization_id)
     use_case = GetOneByIdUseCase(organization_repository=organization_query_repository)

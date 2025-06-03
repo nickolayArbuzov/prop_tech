@@ -1,5 +1,8 @@
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import text
+from sqlalchemy import func, select, cast
+from geoalchemy2.types import Geometry
+from geoalchemy2.functions import ST_X, ST_Y
+from src.features.build.build_model import Build
 from src.common import Pagination
 
 
@@ -9,49 +12,24 @@ class BuildQueryRepository:
 
     async def get_many(self, pagination: Pagination) -> dict:
         offset = (pagination.page - 1) * pagination.limit
-        total_count = await self.session.scalar(text('SELECT COUNT(*) FROM "build"'))
-        builds_query = text(
-            """
-                WITH paginated_builds AS (
-                    SELECT id, address, ST_Y(location::geometry) AS latitude, ST_X(location::geometry) AS longitude
-                    FROM "build"
-                    LIMIT :limit OFFSET :offset
+
+        total_count = await self.session.scalar(select(func.count()).select_from(Build))
+
+        result = (
+            await self.session.execute(
+                select(
+                    Build.id.label("id"),
+                    Build.address.label("address"),
+                    ST_Y(cast(Build.location, Geometry)).label("latitude"),
+                    ST_X(cast(Build.location, Geometry)).label("longitude"),
                 )
-                SELECT
-                    "paginated_builds".id AS build_id,
-                    "paginated_builds".address AS build_address,
-                    "paginated_builds".latitude AS build_latitude,
-                    "paginated_builds".longitude AS build_longitude
-                FROM "paginated_builds"
-            """
-        )
-        rows = await self.session.execute(
-            builds_query, {"offset": offset, "limit": pagination.limit}
-        )
-        column_headers = list(rows.keys())
-        data = rows.fetchall()
+                .limit(pagination.limit)
+                .offset(offset)
+            )
+        ).all()
 
-        def map_query_result_to_json(data, column_headers):
-            result = {"builds": []}
-            build_map = {}
-            for row in data:
-                build_id = row[column_headers.index("build_id")]
-                if build_id not in build_map:
-                    build_obj = {
-                        "id": build_id,
-                        "address": row[column_headers.index("build_address")],
-                        "latitude": row[column_headers.index("build_latitude")],
-                        "longitude": row[column_headers.index("build_longitude")],
-                    }
-                    build_map[build_id] = build_obj
-                    result["builds"].append(build_obj)
-                else:
-                    build_obj = build_map[build_id]
-            return result
-
-        _, value = next(iter(map_query_result_to_json(data, column_headers).items()))
         return {
-            "data": value,
+            "data": result,
             "total": total_count,
             "page": pagination.page,
             "limit": pagination.limit,

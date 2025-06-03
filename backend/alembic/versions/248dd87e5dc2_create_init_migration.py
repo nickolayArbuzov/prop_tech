@@ -7,10 +7,12 @@ Create Date: 2025-05-29 21:18:36.641312
 """
 
 from typing import Sequence, Union
+import uuid
 
 from alembic import op
 import sqlalchemy as sa
 from geoalchemy2 import Geography
+from sqlalchemy.dialects import postgresql
 
 # revision identifiers, used by Alembic.
 revision: str = "248dd87e5dc2"
@@ -21,6 +23,22 @@ depends_on: Union[str, Sequence[str], None] = None
 
 def upgrade() -> None:
     op.execute("CREATE EXTENSION IF NOT EXISTS postgis")
+    op.create_table(
+        "api_key",
+        sa.Column("id", sa.Integer(), primary_key=True),
+        sa.Column(
+            "key",
+            postgresql.UUID(as_uuid=True),
+            default=uuid.uuid4,
+            nullable=False,
+            unique=True,
+            index=True,
+        ),
+        sa.Column("name", sa.String(), nullable=True),
+        sa.Column("created_at", sa.DateTime(), nullable=True),
+        sa.Column("updated_at", sa.DateTime(), nullable=True),
+    )
+
     op.create_table(
         "build",
         sa.Column("id", sa.Integer(), primary_key=True, index=True),
@@ -79,6 +97,7 @@ def upgrade() -> None:
 
 
 def downgrade() -> None:
+    op.drop_table("api_key")
     op.drop_table("organization_activity")
     op.drop_index("ix_activity_parent_id", table_name="activity")
     op.drop_table("activity")

@@ -1,6 +1,6 @@
 # FastAPI REST API with PostgreSQL, SQLAlchemy & Raw SQL
 
-This project is a fully Dockerized REST API built with **FastAPI**, using **SQLAlchemy** for models and **raw SQL** for complex `GET` queries. It includes PostgreSQL and pgAdmin for data management, and exposes interactive API documentation via Swagger and ReDoc.
+This project is a fully Dockerized REST API built with **FastAPI**, using **SQLAlchemy** for models and `GET` queries. It includes PostgreSQL and pgAdmin for data management, and exposes interactive API documentation via Swagger and ReDoc.
 
 ## ⚙️ Stack
 
@@ -8,8 +8,7 @@ This project is a fully Dockerized REST API built with **FastAPI**, using **SQLA
 
 - <img src="https://raw.githubusercontent.com/github/explore/main/topics/fastapi/fastapi.png" alt="FastAPI" width="16" height="16" /> **FastAPI** — blazing fast API framework
 - <img src="https://avatars.githubusercontent.com/u/110818415?s=200&v=4" alt="Pydantic" width="16" /> **Pydantic** — for request/response validation
-- <img src="https://www.sqlalchemy.org/img/sqla_logo.png" alt="SQLAlchemy" width="64" /> **SQLAlchemy** — ORM for models and inserts/updates
-- <img src="https://w7.pngwing.com/pngs/525/959/png-transparent-microsoft-azure-sql-database-microsoft-sql-server-cloud-computing-text-trademark-logo.png" alt="SQL" width="24" /> **Raw SQL** — for flexible `GET` queries
+- <img src="https://www.sqlalchemy.org/img/sqla_logo.png" alt="SQLAlchemy" width="64" /> **SQLAlchemy** — ORM for models, inserts/updates and queries
 - <img src="https://raw.githubusercontent.com/github/explore/main/topics/postgresql/postgresql.png" alt="PostgreSQL" width="16" /> **PostgreSQL** — main relational database
 
 ### ⚙️ Dev & Tooling
@@ -24,7 +23,7 @@ This project is a fully Dockerized REST API built with **FastAPI**, using **SQLA
 - ✅ Fully dockerized backend
 - ✅ Swagger / ReDoc out of the box
 - ✅ PostgreSQL + pgAdmin integration
-- ✅ Raw SQL for complex selects
+- ✅ SQLAlchemy selects for queries
 - ✅ Modular and scalable project layout
 
 ---
@@ -36,6 +35,9 @@ This project is a fully Dockerized REST API built with **FastAPI**, using **SQLA
 ```bash
 docker-compose up
 ```
+
+routes are protected by an API-key, test API-key is `11111111-1111-1111-1111-111111111111`
+add to header for example `X-API-Key=11111111-1111-1111-1111-111111111111`
 
 ## 🚀 What Will Be Launched
 

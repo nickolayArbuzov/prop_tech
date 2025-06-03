@@ -1,5 +1,6 @@
 import asyncio
 import random
+import uuid
 from datetime import datetime
 from geoalchemy2.shape import from_shape
 from shapely.geometry import Point
@@ -12,6 +13,7 @@ from src.features.organization.organization_model import (
 )
 from src.features.telephone.telephone_model import Telephone
 from src.features.activity.activity_model import Activity
+from src.features.api_key.api_key_model import APIKey
 
 ADDRESSES_WITH_COORDS = [
     ("Москва, ул. Арбат, д. 12", (55.752023, 37.586397)),
@@ -73,6 +75,8 @@ ACTIVITY_TREE = [
     {"id": 21, "name": "Металлообработка", "parent_id": 16},
     {"id": 22, "name": "Машиностроение", "parent_id": 16},
 ]
+
+TEST_API_KEY = uuid.UUID("11111111-1111-1111-1111-111111111111")
 
 
 async def seed():
@@ -152,6 +156,14 @@ async def seed():
                             organization_id=org.id, activity_id=act.id
                         )
                     )
+
+            api_key = APIKey(
+                key=TEST_API_KEY,
+                name="test-key",
+                created_at=datetime.utcnow(),
+                updated_at=datetime.utcnow(),
+            )
+            session.add(api_key)
 
 
 if __name__ == "__main__":
